@@ -20,23 +20,29 @@ class Auth extends Controller
         return view('signup');
     }
 
+    public function menu()
+    {
+        return view('menu');
+    }
+
     public function authenticate()
     {
         $model = new UserModel();
 
-        $username = $this->request->getPost('username');
+        $email = $this->request->getPost('email');
         $password = $this->request->getPost('password');
 
-        $user = $model->where('name', $username)->first();
+        $user = $model->where('email', $email)->first();
 
         if ($user && password_verify($password, $user['password'])) {
             // Autenticação bem-sucedida
-            return redirect()->to('/dashboard'); // Redirecionar para o painel
+            return redirect()->to('/menu'); // Redirecionar para o menu
         } else {
             // Falha na autenticação
             return redirect()->back()->with('error', 'Invalid login credentials');
         }
     }
+
 
     public function register()
     {
