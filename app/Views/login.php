@@ -28,6 +28,19 @@
 <body>
     <div class="login-container">
         <h2>Sign In</h2>
+        <!-- Display Success and Error Messages -->
+        <?php if (isset($status)): ?>
+            <div class="alert alert-success">
+                <p><?= esc($status) ?></p>
+            </div>
+        <?php endif; ?>
+
+        <?php if (isset($error)): ?>
+            <div class="alert alert-danger">
+                <p><?= esc($error) ?></p>
+            </div>
+        <?php endif; ?>
+        
         <form action="<?= base_url('login/authenticate') ?>" method="post">
             <div class="form-group">
                 <input type="text" name="username" class="form-control" placeholder="Username" required>

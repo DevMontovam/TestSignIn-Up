@@ -9,7 +9,10 @@ class Auth extends Controller
 {
     public function login()
     {
-        return view('login');
+        echo view('login', [
+            'status' => session()->getFlashdata('status'),
+            'error' => session()->getFlashdata('error'),
+        ]);
     }
 
     public function signup()
@@ -37,17 +40,47 @@ class Auth extends Controller
 
     public function register()
     {
-        $model = new UserModel();
+        // Obter instância da requisição
+        $request = service('request');
 
-        $data = [
-            'name' => $this->request->getPost('name'),
-            'phone' => $this->request->getPost('phone'),
-            'email' => $this->request->getPost('email'),
-            'password' => password_hash($this->request->getPost('password'), PASSWORD_DEFAULT),
-        ];
+        // Validação dos dados do formulário
+        $validation = \Config\Services::validation();
 
-        $model->insert($data);
+        $validation->setRules([
+            'name' => 'required|string|max_length[255]',
+            'phone' => 'required|string|max_length[20]',
+            'email' => 'required|string|valid_email|max_length[255]|is_unique[users.email]',
+            'password' => 'required|string|min_length[8]',
+        ]);
 
-        return redirect()->to('/login');
+        if (!$validation->withRequest($this->request)->run()) {
+            return redirect()->back()->withInput()->with('errors', $validation->getErrors());
+        }
+
+        // Capturar os dados do formulário
+        $name = $request->getPost('name');
+        $phone = $request->getPost('phone');
+        $email = $request->getPost('email');
+        $password = password_hash($request->getPost('password'), PASSWORD_DEFAULT);
+
+        // Instanciar o modelo
+        $userModel = new UserModel();
+
+        try {
+            // Inserir os dados na tabela users usando o modelo
+            $userModel->insert([
+                'name' => $name,
+                'phone' => $phone,
+                'email' => $email,
+                'password' => $password,
+            ]);
+
+            // Redirecionar para a tela de login com uma mensagem de sucesso
+            return redirect()->to('/login')->with('status', 'User registered successfully!');
+        } catch (\Exception $e) {
+            // Exibir erro detalhado para depuração
+            return redirect()->back()->withInput()->with('error', 'Error: ' . $e->getMessage());
+        }
     }
+
 }
