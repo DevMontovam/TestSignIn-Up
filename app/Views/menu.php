@@ -27,7 +27,10 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             z-index: 9999; 
         }
-        .menu-container h1 {
+        .menu-container a{
+            text-decoration: none;
+        }
+        .menu-container a h1 {
             color: #007bff;
             margin: 0;
         }
@@ -47,11 +50,11 @@
             transition: color 0.3s, background 0.3s, border 0.3s;
             outline: none !important;
         }
-        .menu-container nav button:hover {
-            color: #fff;
-            background: #007bff;
-            border: 2px solid #007bff;
-        }
+            .menu-container nav button:hover {
+                color: #fff;
+                background: #007bff;
+                border: 2px solid #007bff;
+            }
         .modal-content {
             color: #000;
         }
@@ -108,16 +111,52 @@
                 background-color: #007bff;
                 outline: none !important;
             }
-            .user-list button img:hover {
-                filter: brightness(0) invert(1);
-            }
+                .user-list button img:hover {
+                    filter: brightness(0) invert(1);
+                }
         .user-item {
+            display: flex;
+            flex-direction: column;
+            justify-content: column;
+            align-items: flex-start;
             padding: 10px;
             border-bottom: 1px solid #ddd;
         }
             .user-item:last-child {
                 border-bottom: none;
-            }        
+            }    
+        .user-item p{
+            margin-right: 1rem;
+            margin-bottom: 10px;
+        }
+        .user-item p strong{
+            color: #007bff;
+            margin-right: 1rem;
+        }        
+        .user-item .btn-container {
+            display: flex;
+            gap: 10px; 
+            margin-top: 10px; 
+        }
+        .user-item .btn-edit, .user-item .btn-delete {
+            margin: 0; 
+            padding: 0.25rem 1rem; 
+            font-size: 0.9em;
+            width: 5rem !important;
+        }
+        .btn-edit, .btn-delete {
+            margin-left: 0.5rem !important;
+            border: none !important;
+            color: #fff !important;
+            cursor: pointer !important;
+            border-radius: 4px !important;
+        }
+        .btn-edit {
+            background-color: #007bff !important;
+        }
+        .btn-delete {
+            background-color: #dc3545 !important;
+        }
         .signup-container {
             background: rgba(255, 255, 255, 0.8);
             padding: 20px;
@@ -163,11 +202,57 @@
             opacity: 1;
             transform: scale(1);
         }
+
+        /* Media Queries for Responsiveness */
+        @media (max-width: 768px) {
+            .menu-container {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .menu-container nav {
+                flex-direction: row;
+                width: 100%;
+            }
+            .menu-container nav button {
+                width: 100%;
+                text-align: center;
+                margin-bottom: 10px;
+            }
+            .user-item {
+                flex-direction: column;
+                text-align: center;
+            }
+            .email-container {
+                margin-top: 10px;
+                justify-content: center;
+                gap: 5px;
+            }
+            .btn-edit, .btn-delete {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.9em;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .user-list {
+                margin-top: 80px;
+                padding: 10px;
+            }
+            .user-item p {
+                font-size: 0.9em;
+            }
+            .btn-edit, .btn-delete {
+                padding: 0.25rem 0.3rem;
+                font-size: 0.8em;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="menu-container">
-        <h1>LOGO</h1>
+        <a href="<?=base_url('login') ?>">
+            <h1>LOGO</h1>
+        </a>        
         <nav>
             <button type="button" data-toggle="modal" data-target="#userModal">Usuário</button>
             <button type="button" data-toggle="modal" data-target="#editModal">Editar</button>
@@ -186,10 +271,25 @@
         <?php if (!empty($users)) : ?>
             <?php foreach ($users as $user) : ?>
                 <div class="user-item">
+                    <p><strong>Id:</strong> <?= esc($user['id']) ?></p>
                     <p><strong>Nome:</strong> <?= esc($user['name']) ?></p>
                     <p><strong>Telefone:</strong> <?= esc($user['phone']) ?></p>
                     <p><strong>Email:</strong> <?= esc($user['email']) ?></p>
+                <div class="btn-container">
+                    <button type="button" class="btn-edit" data-toggle="modal" data-target="#editUserModal"
+                            data-id="<?= esc($user['id']) ?>"
+                            data-name="<?= esc($user['name']) ?>"
+                            data-phone="<?= esc($user['phone']) ?>"
+                            data-email="<?= esc($user['email']) ?>">
+                        Edit
+                    </button>
+                    <form action="<?= base_url('user/delete/' . esc($user['id'])) ?>" method="post" style="display:inline;">
+                        <?= csrf_field() ?>
+                        <button type="submit" class="btn-delete" onclick="return confirm('Are you sure you want to delete this user?');">Delete</button>
+                    </form>
+
                 </div>
+            </div>
             <?php endforeach; ?>
         <?php else : ?>
             <p>Nenhum usuário encontrado.</p>
@@ -287,28 +387,7 @@
                     </button>
                 </div>
                 <div class="signup-container">
-                    <!-- Display Success and Error Messages -->
-                    <?php if (session()->has('errors')): ?>
-                        <div class="alert alert-danger">
-                            <?php foreach (session('errors') as $error): ?>
-                                <p><?= esc($error) ?></p>
-                            <?php endforeach ?>
-                        </div>
-                    <?php endif; ?>
-
-                    <?php if (session()->has('status')): ?>
-                        <div class="alert alert-success">
-                            <p><?= esc(session('status')) ?></p>
-                        </div>
-                    <?php endif; ?>
-
-                    <?php if (session()->has('error')): ?>
-                        <div class="alert alert-danger">
-                            <p><?= esc(session('error')) ?></p>
-                        </div>
-                    <?php endif; ?>
-
-                    <form action="<?= base_url('signup/register') ?>" method="post">
+                    <form action="<?= base_url('signup/register') ?>" method="post">                        
                         <div class="form-group">
                             <input type="text" name="name" class="form-control" placeholder="Name" required>
                         </div>
@@ -331,13 +410,57 @@
                                 </svg>
                             </button>
                         </div>
+                        <input type="hidden" name="redirect" value="menu">
                         <button type="submit" class="btn btn-primary btn-block">Create</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
-
+    
+    <!-- Edit User Modal -->
+    <div class="modal fade" id="editUserModal" tabindex="-1" role="dialog" aria-labelledby="editUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editUserModalLabel" style="color: #007bff">Edit User</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="editUserForm" action="<?= base_url('user/update') ?>" method="post">
+                        <div class="form-group">
+                            <input type="hidden" name="id" id="editUserId">
+                            <div class="form-group">
+                                <input type="text" name="name" id="editName" class="form-control" placeholder="Name" required>
+                            </div>
+                            <div class="form-group">
+                                <input type="text" name="phone" id="editPhone" class="form-control" placeholder="Phone" required>
+                            </div>
+                            <div class="form-group">
+                                <input type="email" name="email" id="editEmail" class="form-control" placeholder="Email" required>
+                            </div>
+                            <div class="form-group">
+                                <input type="password" name="password" id="editPassword" class="form-control" placeholder="Password">
+                                <button type="button" id="editToggleEye" class="toggle-password focus:outline-none">
+                                    <svg id="editEyeOpen" class="hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3C6.48 3 2 12 2 12s4.48 9 10 9 10-9 10-9-4.48-9-10-9z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9.5a2.5 2.5 0 100 5 2.5 2.5 0 000-5z" />
+                                    </svg>
+                                    <svg id="editEyeClosed" class="visible" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12s2-5 9-5 9 5 9 5-2 5-9 5-9-5-9-5z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12h.01M9 12h.01M3 3l18 18" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">Update</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <script>
         const toggleEye = document.getElementById('toggleEye');
         const eyeOpen = document.getElementById('eyeOpen');
@@ -359,6 +482,21 @@
                 passwordInput.type = 'text';
             }
         });
+
+        document.querySelectorAll('.btn-edit').forEach(button => {
+            button.addEventListener('click', function() {
+                const userId = this.getAttribute('data-id');
+                const userName = this.getAttribute('data-name');
+                const userPhone = this.getAttribute('data-phone');
+                const userEmail = this.getAttribute('data-email');
+
+                document.getElementById('editUserId').value = userId;
+                document.getElementById('editName').value = userName;
+                document.getElementById('editPhone').value = userPhone;
+                document.getElementById('editEmail').value = userEmail;
+            });
+        });
+
     </script>
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
