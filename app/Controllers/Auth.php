@@ -22,7 +22,10 @@ class Auth extends Controller
 
     public function menu()
     {
-        return view('menu');
+        $model = new UserModel();
+        $users = $model->findAll();
+        
+        return view('menu', [ 'users' => $users ]);
     }
 
     public function authenticate()
@@ -35,10 +38,8 @@ class Auth extends Controller
         $user = $model->where('email', $email)->first();
 
         if ($user && password_verify($password, $user['password'])) {
-            // Autenticação bem-sucedida
-            return redirect()->to('/menu'); // Redirecionar para o menu
+            return redirect()->to('/menu'); 
         } else {
-            // Falha na autenticação
             return redirect()->back()->with('error', 'Invalid login credentials');
         }
     }
@@ -46,10 +47,8 @@ class Auth extends Controller
 
     public function register()
     {
-        // Obter instância da requisição
         $request = service('request');
 
-        // Validação dos dados do formulário
         $validation = \Config\Services::validation();
 
         $validation->setRules([
@@ -63,17 +62,14 @@ class Auth extends Controller
             return redirect()->back()->withInput()->with('errors', $validation->getErrors());
         }
 
-        // Capturar os dados do formulário
         $name = $request->getPost('name');
         $phone = $request->getPost('phone');
         $email = $request->getPost('email');
         $password = password_hash($request->getPost('password'), PASSWORD_DEFAULT);
 
-        // Instanciar o modelo
         $userModel = new UserModel();
 
         try {
-            // Inserir os dados na tabela users usando o modelo
             $userModel->insert([
                 'name' => $name,
                 'phone' => $phone,
@@ -81,10 +77,8 @@ class Auth extends Controller
                 'password' => $password,
             ]);
 
-            // Redirecionar para a tela de login com uma mensagem de sucesso
             return redirect()->to('/login')->with('status', 'User registered successfully!');
         } catch (\Exception $e) {
-            // Exibir erro detalhado para depuração
             return redirect()->back()->withInput()->with('error', 'Error: ' . $e->getMessage());
         }
     }
